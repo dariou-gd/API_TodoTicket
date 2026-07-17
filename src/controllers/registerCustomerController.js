@@ -2,12 +2,12 @@ import nodemailer from "nodemailer";
 import crypto from "crypto"
 import jsonwebtoken from "jsonwebtoken"
 import bcryptjs from "bcryptjs"
-import adminModel from "../models/admins.js"
+import CustomerModel from "../models/customers.js"
 import { config } from "../config.js";
 
-const registerAdminController = {};
+const registerCustomerController = {};
 
-registerAdminController.registerAdmin = async (req, res) => {
+registerCustomerController.registerCustomer = async (req, res) => {
     try {
         let {
             name,
@@ -19,14 +19,14 @@ registerAdminController.registerAdmin = async (req, res) => {
             timeOut,
         } = req.body;
 
-        const existingAdmin = await adminModel.findOne({ email });
-        if (existingAdmin) {
+        const existingCustomer = await CustomerModel.findOne({ email });
+        if (existingCustomer) {
             return res.status(400).json({ message: "Email already in use" });
         }
 
         const passwordHash = await bcryptjs.hash(password, 10);
 
-        const newAdmin = new adminModel({
+        const newCustomer = new CustomerModel({
             name,
             lastName,
             email,
@@ -36,7 +36,7 @@ registerAdminController.registerAdmin = async (req, res) => {
             timeOut,
         });
 
-        await newAdmin.save();
+        await newCustomer.save();
 
         const verificationCode = crypto.randomBytes(3).toString("hex");
 
@@ -83,7 +83,7 @@ registerAdminController.registerAdmin = async (req, res) => {
     }
 };
 
-registerAdminController.verifyEmail = async(req, res) => {
+registerCustomerController.verifyEmail = async(req, res) => {
     try {
         const {verificationCode} = req.body;
         const token = req.cookies.verificationTokenCookie
@@ -95,9 +95,9 @@ registerAdminController.verifyEmail = async(req, res) => {
             return res.status(400).json({message: "Invalid code"});
         }
 
-        const admin = await adminModel.findOne({email});
-        admin.isVerified = true;
-        await admin.save();
+        const customer = await CustomerModel.findOne({email});
+        customer.isVerified = true;
+        await customer.save();
 
         res.clearCookie("verificationTokenCookie");
 
@@ -108,4 +108,4 @@ registerAdminController.verifyEmail = async(req, res) => {
     }
 };
 
-export default registerAdminController;
+export default registerCustomerController;
